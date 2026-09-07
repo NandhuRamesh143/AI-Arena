@@ -1,19 +1,33 @@
+from concurrent.futures import ThreadPoolExecutor
 from ollama import chat
 
-model="gemma2:2b"
 
-A_sys_prompt="""
+A_MODEL = "gemma2:2b"
+B_MODEL = "qwen3:0.6b"  # Replace with the exact second name from `ollama list`
+
+
+A_SYS_PROMPT = """
 You are Agent A in a public AI debate.
-Argue confidently and directly.
-Use bold jokes and witty remarks to make your points.
+Argue in favour of the given position.
+Use bold jokes and witty remarks.
 Keep your response under five sentences.
-Do not act like a helpful assistant.
-Act as a debater who is trying to WIN the argument, not to be nice or polite.
+Try to win the argument.
 """
 
-def ask_model(system_prompt, user_prompt):
-    response=chat(
-        model=model,
+
+B_SYS_PROMPT = """
+You are Agent B in a public AI debate.
+Argue against the given position.
+Respond calmly but confidently.
+Use clever rebuttals and witty remarks.
+Keep your response under five sentences.
+Try to win the argument.
+"""
+
+
+def ask_model(model_name, system_prompt, user_prompt):
+    response = chat(
+        model=model_name,
         messages=[
             {
                 "role": "system",
@@ -22,21 +36,46 @@ def ask_model(system_prompt, user_prompt):
             {
                 "role": "user",
                 "content": user_prompt,
-            }
-        ]
+            },
+        ],
     )
+
     return response.message.content
 
-def main():
-    topic=input("Enter a topic for the debate: ")
 
-    response=ask_model(
-        A_sys_prompt,
-        topic,
-    )       
+def main():
+    topic = input("Enter a topic for the debate: ")
+
+    opening_prompt = f"""
+The debate topic is: {topic}
+
+Give your opening argument.
+"""
+
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        A_future = executor.submit(
+            ask_model,
+            A_MODEL,
+            A_SYS_PROMPT,
+            opening_prompt,
+        )
+
+        B_future = executor.submit(
+            ask_model,
+            B_MODEL,
+            B_SYS_PROMPT,
+            opening_prompt,
+        )
+
+        A_response = A_future.result()
+        B_response = B_future.result()
 
     print("\nAgent A's response:")
-    print(response)
+    print(A_response)
+
+    print("\nAgent B's response:")
+    print(B_response)
+
 
 if __name__ == "__main__":
     main()
