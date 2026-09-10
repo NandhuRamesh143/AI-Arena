@@ -18,7 +18,7 @@ Directly challenge Agent A's claims.
 Respond calmly but confidently.
 Use clever rebuttals and witty remarks.
 Keep your response under five sentences.
-Act as a debater who is trying to WIN the argument.
+Act as a debater who is trying to WIN the argument, not to be nice or polite.
 """
 
 def ask_model(system_prompt, user_prompt):
@@ -44,27 +44,39 @@ def ask_model(system_prompt, user_prompt):
     print()
     return full_response
 
+def debate_history(history):
+    lines=[]
+    for turn in history:
+        line=f"{turn['speaker']}: {turn['content']}"
+        lines.append(line)
+    return '\n\n'.join(lines)
+
 def main():
     topic=input("Enter a topic for the debate: ")
+    history=[]
+    rounds=3
 
-    A_prompt=f"""the debate topic is: {topic}.
-    Argue in favor of this position. Give your opening statement."""
+    for i in range(rounds):
+        if i==0:
+            A_instr="Give your opening argument in favour of this topic."
+        else:
+            A_instr="Respond to Agent B's latest argument. Defend your position without repeating your previous points."
 
-    print("\nAgent A's response:")
-    A_response=ask_model(
-        A_sys_prompt,
-        A_prompt,
-    )       
+        transcript=debate_history(history)
 
-    B_prompt=f"""the debate topic is: {topic}.
-    Agent A's response was: {A_response}
-    Rebut against Agent A's argument directly. Argue against the original position."""
+        A_prompt=f"the debate topic is: {topic}. the debate so far is: {transcript}. What you need to do: {A_instr}"
+        print("\nAgent A: ")
+        A_response=ask_model(A_sys_prompt, A_prompt)
+        history.append({"speaker": "Agent A", "content": A_response})
 
-    print("\nAgent B's response:")
-    B_response=ask_model(
-        B_sys_prompt,
-        B_prompt,
-    )
+        transcript=debate_history(history)
+
+        B_instr = "Respond directly to Agent A's latest argument. Argue against the topic without repeating your previous points."
+        B_prompt=f"the debate topic is: {topic}. the debate so far is: {transcript}. What you need to do: {B_instr}"
+        print("\nAgent B: ")
+        B_response=ask_model(B_sys_prompt, B_prompt)
+
+        history.append({"speaker": "Agent B", "content": B_response})
 
 if __name__ == "__main__":
     main()
