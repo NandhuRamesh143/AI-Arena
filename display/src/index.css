@@ -60,17 +60,5 @@ input[type="radio"] {
   accent-color: #666666;
 }
 
-.gold-gradient-text {
-  background: linear-gradient(0deg, rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.2)),
-    linear-gradient(116.91deg, #B78000 28.01%, #FFDB86 54.88%, #A27200 66.67%, #A37200 74.76%, #E19D00 82.06%),
-    linear-gradient(92.5deg, rgba(255, 255, 255, 0.3) -2.88%, #FFFFFF 34.04%, rgba(255, 255, 255, 0.3) 79.7%);
- 
-  /* -webkit- versions are needed for Safari/older Chrome support */
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
- 
-  /* Standard versions for modern browsers */
-  background-clip: text;
-  color: transparent;
-}
+
  

@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import Header from "../components/Header";
-import WebThreads from "../components/webThreads";
+import WebThreads from "../components/WebThreads";
 
 export default function HomePage() {
   return (
@@ -44,7 +44,7 @@ export default function HomePage() {
                 NeuraCET x DRISHTI 26 presents
               </p>
               <p
-                className="text-8xl font-bold gold-gradient-text"
+                className="text-9xl text-white font-extrabold"
                 style={{ fontFamily: 'Bietro' }}
               >
                 AI ARENA
