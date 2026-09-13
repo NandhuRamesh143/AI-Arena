@@ -1,8 +1,16 @@
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400..900&display=swap');
 @import "tailwindcss";
 
+@font-face {
+  font-family: 'Bietro';
+  src: url('/Bietro DEMO.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+}
+
 @theme {
   --font-orbitron: 'Orbitron', sans-serif;
+  --font-bietro: 'Bietro', serif;
 }
 
 body {
@@ -52,3 +60,5 @@ input[type="radio"] {
   accent-color: #666666;
 }
 
+
+ 
