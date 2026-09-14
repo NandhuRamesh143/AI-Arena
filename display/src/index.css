@@ -60,5 +60,36 @@ input[type="radio"] {
   accent-color: #666666;
 }
 
+@layer utilities {
+  
+  .text-gold-gradient {
+    background: linear-gradient(0deg, rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.2)), 
+                linear-gradient(116.91deg, #B78000 28.01%, #FFDB86 54.88%, #A27200 66.67%, #A37200 74.76%, #E19D00 82.06%), 
+                linear-gradient(92.5deg, rgba(255, 255, 255, 0.3) -2.88%, #FFFFFF 34.04%, rgba(255, 255, 255, 0.3) 79.7%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    color: transparent;
+  }
 
+  
+  .bg-gold-gradient {
+    background: linear-gradient(116.91deg, #B78000 28.01%, #FFDB86 54.88%, #A27200 66.67%, #A37200 74.76%, #E19D00 82.06%);
+  }
+}
+
+@keyframes maskSlideIn {
+  0% {
+    clip-path: inset(0 0 100% 0);
+    opacity: 0;
+  }
+  100% {
+    clip-path: inset(0 0 0% 0);
+    opacity: 1;
+  }
+}
+
+.animate-mask-reveal {
+  animation: maskSlideIn 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
  
