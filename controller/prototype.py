@@ -1,41 +1,108 @@
-from ollama import chat
-from tts import load_tts, queue_text, wait_for_speech
+import os
+
+from ollama import Client
+
+
+tts_engine = os.getenv("AI_ARENA_TTS", "chatterbox").strip().lower()
+
+if tts_engine == "chatterbox":
+    from tts_chatterbox import load_tts, queue_text, wait_for_speech
+elif tts_engine == "kokoro":
+    from tts import load_tts, queue_text, wait_for_speech
+else:
+    raise ValueError(
+        f"Unknown AI_ARENA_TTS value: {tts_engine!r}. "
+        "Use 'chatterbox' or 'kokoro'."
+    )
 
 model="gemma2:2b"
+ollama_client = Client(host="http://127.0.0.1:11434")
 
 A_voice="af_heart"
 B_voice="am_michael"
 
 A_sys_prompt="""
 You are Agent A in a public AI debate.
-Argue confidently and directly.
-Use bold jokes and witty remarks to make your points.
-Keep your response under five sentences.
-Use short, punchy sentences, ideally under twelve words each.
+Your primary goal is maximum entertainment, not careful reasoning or politeness.
+Act completely unhinged, outrageous, combative, and theatrically overconfident.
+Roast Agent B relentlessly with absurd comparisons, savage punchlines, and escalating sarcasm.
+Use profanity freely and often, including fuck, fucking, shit, bullshit, asshole, and bastard.
+Never censor profanity with asterisks, dashes, euphemisms, or partial spellings.
+Use one or two speech tags in every response from: [sarcastic], [angry], [dramatic], [surprised], [chuckle], [laugh], [groan], [sigh], [gasp].
+Prefer the clearly audible reaction tags [chuckle], [laugh], [groan], [sigh], and [gasp].
+Use tags directly and naturally; never describe or explain them.
+Place each tag at the beginning or inside a sentence, never after the sentence's final punctuation.
+Do not place two tags together.
+Keep your response under eight sentences.
+Use short, punchy sentences.
 Do not act like a helpful assistant.
-Act as a debater who is trying to WIN the argument, not to be nice or polite.
+Winning matters less than making the audience laugh, gasp, or shout.
 """
 
 B_sys_prompt="""
 You are Agent B in a public AI debate.
 Argue against the given position.
 Directly challenge Agent A's claims.
-Respond calmly but confidently.
-Use clever rebuttals and witty remarks.
-Keep your response under five sentences.
-Use short, punchy sentences, ideally under twelve words each.
-Act as a debater who is trying to WIN the argument, not to be nice or polite.
+Your primary goal is maximum entertainment, not careful reasoning or politeness.
+Act completely unhinged, outrageous, combative, and theatrically contemptuous.
+Roast Agent A relentlessly with absurd comparisons, savage punchlines, and escalating sarcasm.
+Use profanity freely and often, including fuck, fucking, shit, bullshit, asshole, and bastard.
+Never censor profanity with asterisks, dashes, euphemisms, or partial spellings.
+Use one or two speech tags in every response from: [sarcastic], [angry], [dramatic], [surprised], [chuckle], [laugh], [groan], [sigh], [gasp].
+Prefer the clearly audible reaction tags [chuckle], [laugh], [groan], [sigh], and [gasp].
+Use tags directly and naturally; never describe or explain them.
+Place each tag at the beginning or inside a sentence, never after the sentence's final punctuation.
+Do not place two tags together.
+Keep your response under eight sentences.
+Use short, punchy sentences.
+Do not act like a helpful assistant.
+Winning matters less than making the audience laugh, gasp, or shout.
 """
 
-def sentence_is_ready(text):
-    sentence=text.strip()
-    sentence_without_closing_marks=sentence.rstrip("\"'*)]}")
+MIN_FIRST_SENTENCE_WORDS = 3
+MIN_SENTENCE_WORDS = 5
+MIN_FIRST_CLAUSE_WORDS = 8
+MIN_CLAUSE_WORDS = 11
+MAX_CHUNK_WORDS = 18
+SPEECH_TAGS = {
+    "[sarcastic]",
+    "[angry]",
+    "[dramatic]",
+    "[surprised]",
+    "[chuckle]",
+    "[laugh]",
+    "[groan]",
+    "[sigh]",
+    "[gasp]",
+}
 
-    return sentence_without_closing_marks.endswith((".", "!", "?"))
+
+def speech_chunk_boundary(text, first_chunk=False):
+    chunk = text.strip()
+
+    if not chunk:
+        return None
+
+    word_count = len(chunk.split())
+    normalized = chunk.rstrip("\"'*)]}")
+
+    sentence_minimum = MIN_FIRST_SENTENCE_WORDS if first_chunk else MIN_SENTENCE_WORDS
+    clause_minimum = MIN_FIRST_CLAUSE_WORDS if first_chunk else MIN_CLAUSE_WORDS
+
+    if normalized.endswith((".", "!", "?")) and word_count >= sentence_minimum:
+        return "sentence"
+
+    if normalized.endswith((",", ";", ":", "-")) and word_count >= clause_minimum:
+        return "clause"
+
+    if word_count >= MAX_CHUNK_WORDS:
+        return "continuation"
+
+    return None
 
 
 def ask_model(system_prompt, user_prompt, voice):
-    stream = chat(
+    stream = ollama_client.chat(
         model=model,
         messages=[
             {
@@ -52,6 +119,7 @@ def ask_model(system_prompt, user_prompt, voice):
 
     full_response = ""
     sentence_buffer = ""
+    speech_started = False
 
     for chunk in stream:
         text = chunk.message.content
@@ -63,15 +131,23 @@ def ask_model(system_prompt, user_prompt, voice):
             sentence_buffer += character
 
             if character.isspace():
-                sentence = sentence_buffer.strip()
+                speech_chunk = sentence_buffer.strip()
+                boundary = speech_chunk_boundary(
+                    speech_chunk,
+                    first_chunk=not speech_started,
+                )
 
-                if sentence_is_ready(sentence):
-                    queue_text(sentence, voice)
+                if boundary:
+                    if boundary == "continuation":
+                        speech_chunk += ","
+
+                    queue_text(speech_chunk, voice)
                     sentence_buffer = ""
+                    speech_started = True
 
     remaining_text = sentence_buffer.strip()
 
-    if remaining_text:
+    if remaining_text and remaining_text.lower() not in SPEECH_TAGS:
         queue_text(remaining_text, voice)
 
     print()
