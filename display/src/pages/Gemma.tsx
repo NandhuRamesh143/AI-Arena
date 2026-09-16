@@ -32,15 +32,16 @@ export default function Gemma() {
   return (
     <div className="min-h-screen bg-white relative overflow-hidden font-sans text-black">
       {/* Header gap simulation */}
-      <div className="h-16 border-b border-gray-400 flex items-center justify-center text-gray-500 text-sm bg-gray-50">
-        header gap
+      <div className="h-20 flex items-center justify-center text-black text-sm bg-gray-50"   
+            style={{ fontFamily: 'Bietro' }}>
+        GEMMA
       </div>
 
       {/* Main Content Area */}
       <div className="relative p-8 h-[calc(100vh-4rem)] flex justify-center items-center">
         
         {/* Streaming text area box */}
-        <div className={`transition-opacity duration-1000 ease-in-out w-full max-w-4xl h-full max-h-[70vh] border border-gray-400 p-12 flex items-center justify-center mt-8 ml-16 relative ${phase === 'streaming' ? 'opacity-100' : 'opacity-0'}`}>
+        <div className={`transition-opacity duration-1000 ease-in-out w-full max-w-4xl h-full max-h-[70vh] p-12 flex items-center justify-center mt-8 ml-16 relative ${phase === 'streaming' ? 'opacity-100' : 'opacity-0'}`}>
           {phase === 'streaming' ? (
              <div className="text-gray-800 text-lg w-full h-full text-center">
                {displayedText}
