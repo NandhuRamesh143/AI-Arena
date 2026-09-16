@@ -1,15 +1,51 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
 
 interface LLMMessageProps {
   content: string;
+  fontSize?: string;
+  animate?: boolean; // Optional flag to enable typewriter effect
+  speed?: number;    // Optional speed in milliseconds per character
 }
 
-export const LLMMessage: React.FC<LLMMessageProps> = ({ content }) => {
+export const LLMMessage: React.FC<LLMMessageProps> = ({ 
+  content, 
+  fontSize = "text-sm",
+  animate = false,
+  speed = 15 // Default typing speed
+}) => {
+  // State to hold the progressively revealed text
+  const [displayedContent, setDisplayedContent] = useState(animate ? '' : content);
+
+  useEffect(() => {
+    // If animation is disabled, just show the full content immediately
+    if (!animate) {
+      setDisplayedContent(content);
+      return;
+    }
+
+    // Reset displayed content when the actual content changes
+    let currentIndex = 0;
+    setDisplayedContent('');
+
+    const intervalId = setInterval(() => {
+      if (currentIndex < content.length) {
+        // Use slice instead of appending to avoid React state batching issues
+        setDisplayedContent(content.slice(0, currentIndex + 1));
+        currentIndex++;
+      } else {
+        clearInterval(intervalId);
+      }
+    }, speed);
+
+    // Cleanup interval on unmount or when dependencies change
+    return () => clearInterval(intervalId);
+  }, [content, animate, speed]);
+
   return (
-    <div className="text-sm leading-relaxed wrap-break-words text-zinc-100">
+    <div className={`${fontSize} leading-relaxed wrap-break-words text-zinc-100`}>
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         rehypePlugins={[rehypeHighlight]}
@@ -37,7 +73,7 @@ export const LLMMessage: React.FC<LLMMessageProps> = ({ content }) => {
           // Code blocks & Inline code
           pre: ({ ...props }) => (
             <pre
-              className="p-3 my-2 rounded-lg bg-zinc-950 border border-zinc-800 overflow-x-auto text-xs font-mono"
+              className={`p-3 my-2 rounded-lg bg-zinc-950 border border-zinc-800 overflow-x-auto text-xs font-mono ${fontSize}`}
               {...props}
             />
           ),
@@ -45,7 +81,7 @@ export const LLMMessage: React.FC<LLMMessageProps> = ({ content }) => {
             const isInline = !className;
             return isInline ? (
               <code
-                className="bg-zinc-700/60 text-amber-300 px-1.5 py-0.5 rounded text-xs font-mono"
+                className={`bg-zinc-700/60 text-amber-300 px-1.5 py-0.5 rounded text-xs font-mono ${fontSize}`}
                 {...props}
               />
             ) : (
@@ -73,7 +109,7 @@ export const LLMMessage: React.FC<LLMMessageProps> = ({ content }) => {
           ),
         }}
       >
-        {content}
+        {displayedContent}
       </ReactMarkdown>
     </div>
   );

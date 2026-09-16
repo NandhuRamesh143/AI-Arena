@@ -8,9 +8,8 @@ function App() {
     <div>
       <Routes>
         <Route path="/" element={<HomePage />} />
-        <Route path="/gemma" element={<Gemma />} />
-        <Route path="/qwen" element={<Qwen />} />
-             </Routes>
+        <Route path="/debate" element={<DebatePage />} />
+      </Routes>
     </div>
     </>
   )
