@@ -1,46 +1,9 @@
-import { useState, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import WebThreads from "../components/WebThreads";
 
-export interface DebateConfig {
-  topic: string;
-  position: "for" | "against" | "";
-  duration: number;
-  rounds: number;
-}
-
 export default function HomePage() {
-  const [topic, setTopic] = useState("");
-  const arenaRef = useRef<HTMLDivElement>(null);
-
-  // Parallax mouse offset state
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
-
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const { clientX, clientY } = e;
-    const { innerWidth, innerHeight } = window;
-    // Calculate offset from center (-1 to 1)
-    const x = (clientX / innerWidth - 0.5) * 20;
-    const y = (clientY / innerHeight - 0.5) * 20;
-    setMousePos({ x, y });
-  };
-
-  const handleSubmit = () => {
-    if (!topic.trim()) {
-      alert("Please enter a topic.");
-      return;
-    }
-
-    const payload: DebateConfig = {
-      topic: topic.trim(),
-      position: "for",
-      duration: 5,
-      rounds: 3,
-    };
-
-    console.log("Starting debate with config:", payload);
-    arenaRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
+  const navigate = useNavigate();
 
   return (
     <div className="w-full overflow-x-hidden">
@@ -92,81 +55,26 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* SECTION 2: TOPIC SELECTION PAGE WITH PARALLAX */}
-      <div 
-        onMouseMove={handleMouseMove}
-        className="relative w-full h-screen bg-black flex flex-col items-center justify-center px-8 overflow-hidden"
-      >
-        
-        {/* LAYER 1: BACKGROUND (Hands & Atmosphere) - Moves with Parallax */}
-        <div 
-          className="absolute inset-0 pointer-events-none flex justify-between items-center z-0 px-4 transition-transform duration-100 ease-out"
-          style={{ transform: `translate(${-mousePos.x * 0.5}px, ${-mousePos.y * 0.5}px)` }}
-        >
-          {/* Robot Hand */}
-          <div className="absolute -left-10 bottom-20 w-[42vw] max-w-xl transform scale-y-[1] rotate-12 opacity-80">
-            <img src="/robo.png" alt="Robot hand" className="w-full h-auto object-contain" />
-          </div>
-
-          {/* Human Hand */}
-          <div className="absolute -right-10 bottom-7 w-[42vw] max-w-xl opacity-80">
-            <img src="/human.png" alt="Human hand" className="w-full h-auto object-contain" />
-          </div>
-        </div>
-
-        {/* LAYER 2: FOREGROUND (Text, Input & Button) - Static / Slightly Counter-moves */}
-        <div 
-          className="relative z-10 w-full max-w-2xl flex flex-col items-center transition-transform duration-100 ease-out"
-          style={{ transform: `translate(${mousePos.x * 0.2}px, ${mousePos.y * 0.2}px)` }}
-        >
-          <div className="text-center mb-8">
-            <h2 className="text-3xl font-light text-white tracking-widest uppercase mb-1">
-              Dive Into A
-            </h2>
-            <h1 className="text-7xl font-bold tracking-wider drop-shadow-lg text-gold-gradient"
-            style={{ fontFamily: 'Bietro' }}>
-              DEBATE
-            </h1>
-          </div>
-
-          <div className="w-full mb-6">
-            <input
-              type="text"
-              value={topic}
-              onChange={(e) => setTopic(e.target.value)}
-              placeholder="Enter debate topic"
-              className="w-full px-6 py-4 bg-black/60 backdrop-blur-md border border-white/30 rounded-lg text-white placeholder-white/50 text-lg focus:outline-none focus:border-[#FFDB86] focus:bg-black/80 shadow-2xl transition-all"
-            />
-          </div>
-
-          <div className="flex justify-center">
-            <button
-              onClick={handleSubmit}
-              className="bg-gold-gradient text-black font-extrabold px-8 py-3 rounded-lg text-lg transition-transform hover:scale-105 shadow-lg pointer-events-auto cursor-pointer"
-            >
-              Start Debate
-            </button>
-          </div>
-        </div>
-      </div>
-
-  {/* {/* SECTION 3: MODEL REVEAL ARENA */}
-      <div ref={arenaRef} className="relative w-full h-screen bg-[#070709] flex flex-col items-center justify-center px-8 overflow-hidden border-t border-white/10">
+      {/* SECTION 2: MODEL SELECTION ARENA */}
+      <div className="relative w-full h-screen bg-[#070709] flex flex-col items-center justify-center px-8 overflow-hidden border-t border-white/10">
          <div className="text-center mb-8">
             <h2 className="text-3xl font-light text-white tracking-widest uppercase mb-1">
-              CHOOSE WHO GOES
+              CHOOSE YOUR
             </h2>
             <h1 className="text-7xl font-bold tracking-wider drop-shadow-lg text-gold-gradient"
             style={{ fontFamily: 'Bietro' }}>
-              FIRST
+              MODEL
             </h1>
           </div>
 
         {/* Side-by-Side Model Cards Reveal */}
         <div className="flex flex-row justify-center items-center gap-10 w-full max-w-3xl">
           
-          {/* QWEN CARD (Dark Grey/Black with Golden Hover Glow & Taller Height) */}
-          <div className="flex-1 h-[450px] bg-[#121212] border border-white/10 p-10  flex flex-col items-center justify-between text-center shadow-xl animate-mask-reveal transition-all duration-1000 hover:scale-[1.02] hover:border-[#FFDB86] hover:shadow-[0_0_40px_rgba(255,219,134,0.3)]">
+          {/* QWEN CARD */}
+          <div 
+            onClick={() => navigate("/qwen")}
+            className="cursor-pointer flex-1 h-[450px] bg-[#121212] border border-white/10 p-10  flex flex-col items-center justify-between text-center shadow-xl animate-mask-reveal transition-all duration-1000 hover:scale-[1.02] hover:border-[#FFDB86] hover:shadow-[0_0_40px_rgba(255,219,134,0.3)]"
+          >
             <div className="w-24 h-24 mb-4 flex items-center justify-center">
               <img src="/qwen.png" alt="Qwen Logo" className="w-full h-full object-contain" />
             </div>
@@ -176,13 +84,16 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* VS Divider */}
+          {/* OR Divider */}
           <div className="text-2xl font-black italic text-gray-600 tracking-tighter">
-            VS
+            OR
           </div>
 
-          {/* GEMMA CARD (White with Golden Hover Glow & Taller Height) */}
-          <div className="flex-1 h-[450px] bg-white border border-gray-200 p-10 flex flex-col items-center justify-between text-center shadow-xl animate-mask-reveal transition-all duration-1000 hover:scale-[1.02] hover:border-[#FFDB86] hover:shadow-[0_0_40px_rgba(255,219,134,0.4)]" style={{ animationDelay: '0.2s' }}>
+          {/* GEMMA CARD */}
+          <div 
+            onClick={() => navigate("/gemma")}
+            className="cursor-pointer flex-1 h-[450px] bg-white border border-gray-200 p-10 flex flex-col items-center justify-between text-center shadow-xl animate-mask-reveal transition-all duration-1000 hover:scale-[1.02] hover:border-[#FFDB86] hover:shadow-[0_0_40px_rgba(255,219,134,0.4)]" style={{ animationDelay: '0.2s' }}
+          >
             <div className="w-24 h-24 mb-4 flex items-center justify-center">
               <img src="/gemma.png" alt="Gemma Logo" className="w-full h-full object-contain" />
             </div>
