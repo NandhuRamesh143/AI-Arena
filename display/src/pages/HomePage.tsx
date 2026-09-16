@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import WebThreads from "../components/WebThreads";
 
@@ -10,6 +11,7 @@ export interface DebateConfig {
 }
 
 export default function HomePage() {
+  const navigate = useNavigate();
   const [topic, setTopic] = useState("");
   const arenaRef = useRef<HTMLDivElement>(null);
 
@@ -166,7 +168,9 @@ export default function HomePage() {
         <div className="flex flex-row justify-center items-center gap-10 w-full max-w-3xl">
           
           {/* QWEN CARD (Dark Grey/Black with Golden Hover Glow & Taller Height) */}
-          <div className="flex-1 h-[450px] bg-[#121212] border border-white/10 p-10  flex flex-col items-center justify-between text-center shadow-xl animate-mask-reveal transition-all duration-1000 hover:scale-[1.02] hover:border-[#FFDB86] hover:shadow-[0_0_40px_rgba(255,219,134,0.3)]">
+          <div 
+            onClick={() => navigate("/qwen")}
+            className="cursor-pointer flex-1 h-[450px] bg-[#121212] border border-white/10 p-10  flex flex-col items-center justify-between text-center shadow-xl animate-mask-reveal transition-all duration-1000 hover:scale-[1.02] hover:border-[#FFDB86] hover:shadow-[0_0_40px_rgba(255,219,134,0.3)]">
             <div className="w-24 h-24 mb-4 flex items-center justify-center">
               <img src="/qwen.png" alt="Qwen Logo" className="w-full h-full object-contain" />
             </div>
@@ -182,7 +186,9 @@ export default function HomePage() {
           </div>
 
           {/* GEMMA CARD (White with Golden Hover Glow & Taller Height) */}
-          <div className="flex-1 h-[450px] bg-white border border-gray-200 p-10 flex flex-col items-center justify-between text-center shadow-xl animate-mask-reveal transition-all duration-1000 hover:scale-[1.02] hover:border-[#FFDB86] hover:shadow-[0_0_40px_rgba(255,219,134,0.4)]" style={{ animationDelay: '0.2s' }}>
+          <div 
+            onClick={() => navigate("/gemma")}
+            className="cursor-pointer flex-1 h-[450px] bg-white border border-gray-200 p-10 flex flex-col items-center justify-between text-center shadow-xl animate-mask-reveal transition-all duration-1000 hover:scale-[1.02] hover:border-[#FFDB86] hover:shadow-[0_0_40px_rgba(255,219,134,0.4)]" style={{ animationDelay: '0.2s' }}>
             <div className="w-24 h-24 mb-4 flex items-center justify-center">
               <img src="/gemma.png" alt="Gemma Logo" className="w-full h-full object-contain" />
             </div>
