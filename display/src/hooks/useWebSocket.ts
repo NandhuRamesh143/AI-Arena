@@ -1,53 +1,18 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 
 type ConnectionState = 'connecting' | 'connected' | 'disconnected' | 'error';
-type MessageType = 'state' | 'round' | 'error' | 'response' | 'complete';
-type AgentType = 'model';
 
-interface StateData {
-  status: string;
-}
+type WebSocketMessage = Record<string, unknown>;
 
-interface RoundData {
-  'argument-count': {
-    current: number;
-    total: number;
-  };
-  round: {
-    current: number;
-    total: number;
-  };
-}
-
-interface ErrorData {
-  error: string;
-}
-
-interface ResponseData {
-  response: string;
-}
-
-interface CompleteData {
-  complete: string | boolean;
-}
-
-type MessageData = StateData | RoundData | ErrorData | ResponseData | CompleteData;
-
-interface WebSocketMessage {
-  type: MessageType;
-  agent: AgentType;
-  data: MessageData;
-}
-
-interface WebSocketConnectionOptions {
+type WebSocketConnectionOptions = {
   maxReconnectAttempts?: number;
   baseReconnectDelay?: number;
   maxReconnectDelay?: number;
   enableReconnect?: boolean;
   maxMessages?: number;
-}
+};
 
-interface WebSocketConnectionReturn {
+type WebSocketConnectionReturn = {
   connectionStatus: ConnectionState;
   messages: WebSocketMessage[];
   sendMessage: (message: WebSocketMessage) => void;
@@ -57,38 +22,11 @@ interface WebSocketConnectionReturn {
   clearMessages: () => void;
   clearError: () => void;
   isConnected: boolean;
-}
+};
 
 // Runtime message validator
 function isValidWebSocketMessage(msg: unknown): msg is WebSocketMessage {
-  if (!msg || typeof msg !== 'object') {
-    return false;
-  }
-
-  const message = msg as Record<string, unknown>;
-
-  // Check required fields exist
-  if (!('type' in message) || !('agent' in message) || !('data' in message)) {
-    return false;
-  }
-
-  // Validate type is one of the allowed values
-  const validTypes: MessageType[] = ['state', 'round', 'error', 'response', 'complete'];
-  if (typeof message.type !== 'string' || !validTypes.includes(message.type as MessageType)) {
-    return false;
-  }
-
-  // Validate agent is 'model'
-  if (message.agent !== 'model') {
-    return false;
-  }
-
-  // Validate data is an object
-  if (!message.data || typeof message.data !== 'object') {
-    return false;
-  }
-
-  return true;
+  return msg !== null && typeof msg === 'object';
 }
 
 export function useWebSocketConnection(
