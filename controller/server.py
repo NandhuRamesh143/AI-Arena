@@ -108,6 +108,8 @@ class Arena:
             await websocket.send_json(payload)
 
     async def receive_model_response(self, role: str, text: str) -> None:
+        import re
+        text = re.sub(r'<think>.*?</think>', '', text, flags=re.DOTALL).strip()
         future = self.pending.get(role)
         if future and not future.done():
             future.set_result(text)
