@@ -4,6 +4,12 @@ __pycache__/
 
 # Local Python environment
 .venv/
+.venv_tts/
+AI-Arena-Chatterbox-cache/
+
+# Node modules & build outputs
+node_modules/
+dist/
 
 # Secrets and local configuration
 .env

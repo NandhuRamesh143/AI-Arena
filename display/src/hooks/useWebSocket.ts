@@ -2,30 +2,40 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 
 type ConnectionState = 'connecting' | 'connected' | 'disconnected' | 'error';
 
-type WebSocketMessage = Record<string, unknown>;
+export interface WebSocketMessage {
+  type: string;
+  [key: string]: unknown;
+}
 
-type WebSocketConnectionOptions = {
+interface WebSocketConnectionOptions {
   maxReconnectAttempts?: number;
   baseReconnectDelay?: number;
   maxReconnectDelay?: number;
   enableReconnect?: boolean;
-};
+  maxMessages?: number;
+}
 
-type WebSocketConnectionReturn = {
+interface WebSocketConnectionReturn {
   connectionStatus: ConnectionState;
-  message: string | null;
+  messages: WebSocketMessage[];
   sendMessage: (message: WebSocketMessage) => void;
   lastError: string | null;
   connect: () => void;
   disconnect: () => void;
-  clearMessage: () => void;
+  clearMessages: () => void;
   clearError: () => void;
   isConnected: boolean;
-};
+}
 
 // Runtime message validator
 function isValidWebSocketMessage(msg: unknown): msg is WebSocketMessage {
-  return msg !== null && typeof msg === 'object';
+  if (!msg || typeof msg !== 'object') {
+    return false;
+  }
+
+  const message = msg as Record<string, unknown>;
+
+  return typeof message.type === 'string';
 }
 
 export function useWebSocketConnection(
@@ -37,10 +47,11 @@ export function useWebSocketConnection(
     baseReconnectDelay = 1000,
     maxReconnectDelay = 30000,
     enableReconnect = true,
+    maxMessages = 100,
   } = options;
 
   const [connectionStatus, setConnectionStatus] = useState<ConnectionState>('disconnected');
-  const [message, setMessage] = useState<string | null>(null);
+  const [messages, setMessages] = useState<WebSocketMessage[]>([]);
   const [lastError, setLastError] = useState<string | null>(null);
 
   const wsRef = useRef<WebSocket | null>(null);
@@ -86,7 +97,14 @@ export function useWebSocketConnection(
         try {
           const parsedMessage = JSON.parse(event.data);
           if (isValidWebSocketMessage(parsedMessage)) {
-            setMessage(event.data);
+            setMessages((prev) => {
+              const newMessages = [...prev, parsedMessage];
+              // Keep only the latest maxMessages to prevent memory issues
+              if (newMessages.length > maxMessages) {
+                return newMessages.slice(-maxMessages);
+              }
+              return newMessages;
+            });
           } else {
             console.warn('Received message with invalid structure:', parsedMessage);
           }
@@ -133,7 +151,7 @@ export function useWebSocketConnection(
       setConnectionStatus('error');
       setLastError(error instanceof Error ? error.message : 'Failed to create WebSocket connection');
     }
-  }, [url, enableReconnect, maxReconnectAttempts, baseReconnectDelay, maxReconnectDelay]);
+  }, [url, enableReconnect, maxReconnectAttempts, baseReconnectDelay, maxReconnectDelay, maxMessages]);
 
   useEffect(() => {
     connectRef.current = connect;
@@ -156,8 +174,8 @@ export function useWebSocketConnection(
     setConnectionStatus('disconnected');
   }, [cleanup]);
 
-  const clearMessage = useCallback(() => {
-    setMessage(null);
+  const clearMessages = useCallback(() => {
+    setMessages([]);
   }, []);
 
   const clearError = useCallback(() => {
@@ -193,12 +211,12 @@ export function useWebSocketConnection(
 
   return {
     connectionStatus,
-    message,
+    messages,
     sendMessage,
     lastError,
     connect,
     disconnect,
-    clearMessage,
+    clearMessages,
     clearError,
     isConnected: connectionStatus === 'connected',
   };

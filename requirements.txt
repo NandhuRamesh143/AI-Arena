@@ -1,6 +1,7 @@
 ollama
-httpx
-chatterbox-tts==0.1.7
-setuptools==80.9.0
+kokoro==0.9.4; python_version < "3.13"
 numpy
 sounddevice
+fastapi
+uvicorn[standard]
+pydantic

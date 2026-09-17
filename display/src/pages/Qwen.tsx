@@ -1,10 +1,49 @@
-import React, { useState, useEffect } from 'react';
-
-const mockText = "This is a streamed mock response from the Qwen model. It demonstrates the text streaming capability after the animation finishes. Here we can imagine the AI generating a thoughtful, detailed response to the user's prompt in real-time, token by token.";
+import { useState, useEffect, useRef } from 'react';
+import { useWebSocketConnection } from '../hooks/useWebSocket';
+import { arenaWebSocketUrl, askLocalOllama } from '../lib/arena';
 
 export default function Qwen() {
   const [phase, setPhase] = useState<'listening' | 'animating' | 'streaming'>('listening');
   const [displayedText, setDisplayedText] = useState('');
+  const isGenerating = useRef(false);
+
+  const ws = useWebSocketConnection(arenaWebSocketUrl("qwen"));
+
+  // Process incoming messages
+  useEffect(() => {
+    const processPrompt = async () => {
+      const promptMsg = ws.messages.findLast(m => m.type === "prompt" && !m.processed);
+      if (promptMsg && !isGenerating.current) {
+        promptMsg.processed = true;
+        isGenerating.current = true;
+        
+        // Start animation immediately
+        setPhase('animating');
+        
+        try {
+          const content = await askLocalOllama(
+            promptMsg.model as string, 
+            promptMsg.system as string, 
+            promptMsg.prompt as string,
+            (text) => setDisplayedText(text)
+          );
+          ws.sendMessage({ type: "model_response", content: content });
+        } catch (error) {
+          setDisplayedText("Error generating response: " + (error as Error).message);
+        } finally {
+          isGenerating.current = false;
+        }
+      }
+      
+      const clearMsg = ws.messages.findLast(m => (m.type === "debate_started" || m.type === "stopped") && !m.processed_clear);
+      if (clearMsg) {
+        clearMsg.processed_clear = true;
+        setPhase('listening');
+        setDisplayedText('');
+      }
+    };
+    processPrompt();
+  }, [ws.messages]);
 
   useEffect(() => {
     if (phase === 'animating') {
@@ -15,17 +54,10 @@ export default function Qwen() {
     }
   }, [phase]);
 
+  // Remove fake typing interval, text is now streamed directly
   useEffect(() => {
-    if (phase === 'streaming') {
-      let i = 0;
-      const interval = setInterval(() => {
-        setDisplayedText(mockText.slice(0, i));
-        i++;
-        if (i > mockText.length) {
-          clearInterval(interval);
-        }
-      }, 20);
-      return () => clearInterval(interval);
+    if (phase === 'listening') {
+      setDisplayedText('');
     }
   }, [phase]);
 
@@ -41,8 +73,8 @@ export default function Qwen() {
       <div className="relative p-8 h-[calc(100vh-4rem)] flex justify-center items-center">
         
         {/* Streaming text area box */}
-        <div className={`transition-opacity duration-1000 ease-in-out w-full max-w-4xl h-full max-h-[70vh] p-12 flex items-center justify-center mt-8 ml-16 relative ${phase === 'streaming' ? 'opacity-100' : 'opacity-0'}`}>
-          {phase === 'streaming' ? (
+        <div className={`transition-opacity duration-1000 ease-in-out w-full max-w-4xl h-full max-h-[70vh] p-12 flex items-center justify-center mt-8 ml-16 relative ${phase !== 'listening' ? 'opacity-100' : 'opacity-0'}`}>
+          {phase !== 'listening' ? (
              <div className="text-white/90 text-lg w-full h-full text-center">
                {displayedText}
              </div>
