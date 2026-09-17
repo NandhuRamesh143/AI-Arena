@@ -49,7 +49,7 @@ OLLAMA_ORIGINS="*" ollama serve
 Make sure the model exists:
 
 ```bash
-ollama pull qwen3.5:2b
+ollama pull qwen3:4b-instruct
 ```
 
 Open:
@@ -69,7 +69,7 @@ OLLAMA_ORIGINS="*" ollama serve
 Make sure the model exists:
 
 ```bash
-ollama pull gemma2:2b
+ollama pull gemma4:e2b
 ```
 
 Open:
@@ -119,10 +119,10 @@ AI_ARENA_QWEN_VOICE=am_adam AI_ARENA_GEMMA_VOICE=af_heart uvicorn controller.ser
 Override default model names on the controller server with environment variables:
 
 ```bash
-AI_ARENA_QWEN_MODEL="qwen3.5:2b" AI_ARENA_GEMMA_MODEL="gemma2:2b" uvicorn controller.server:app --host 0.0.0.0 --port 8000
+AI_ARENA_QWEN_MODEL="qwen3:4b-instruct" AI_ARENA_GEMMA_MODEL="gemma4:e2b" uvicorn controller.server:app --host 0.0.0.0 --port 8000
 ```
 
 The defaults are:
 
-- Qwen: `qwen3.5:2b`
-- Gemma: `gemma2:2b`
+- Qwen: `qwen3:4b-instruct`
+- Gemma: `gemma4:e2b`

@@ -15,3 +15,11 @@ __pycache__/
 Thumbs.db
 .venv_tts/
 controller/.venv_tts/
+.venv_chatterbox/
+.uv-cache/
+.uv-python/
+AI-Arena-Chatterbox-cache/
+display/.npm-cache/
+.numba-cache/
+.vendor/
+.vendor311/

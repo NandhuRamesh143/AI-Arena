@@ -9,7 +9,7 @@ from threading import Thread
 
 
 WORKSPACE_ROOT = Path(__file__).resolve().parents[1]
-MODEL_CACHE = WORKSPACE_ROOT / "AI-Arena-Chatterbox-cache"
+MODEL_CACHE = Path(os.getenv("AI_ARENA_CHATTERBOX_CACHE", WORKSPACE_ROOT / "AI-Arena-Chatterbox-cache"))
 
 os.environ.setdefault("HF_HOME", str(MODEL_CACHE))
 

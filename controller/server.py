@@ -24,12 +24,12 @@ TTS_VOICES = {
 AGENTS = {
     "qwen": {
         "label": "Qwen",
-        "model": os.getenv("AI_ARENA_QWEN_MODEL", "qwen3.5:2b"),
+        "model": os.getenv("AI_ARENA_QWEN_MODEL", "qwen3:4b-instruct"),
         "stance": "for",
     },
     "gemma": {
         "label": "Gemma",
-        "model": os.getenv("AI_ARENA_GEMMA_MODEL", "gemma2:2b"),
+        "model": os.getenv("AI_ARENA_GEMMA_MODEL", "gemma4:e2b"),
         "stance": "against",
     },
 }
