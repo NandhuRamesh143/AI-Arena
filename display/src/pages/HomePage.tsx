@@ -2,7 +2,6 @@ import { useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import Header from "../components/Header";
 import WebThreads from "../components/WebThreads";
-import { startDebate } from "../lib/arena";
 
 export interface DebateConfig {
   topic: string;
@@ -32,18 +31,7 @@ export default function HomePage() {
       alert("Please enter a topic.");
       return;
     }
-
-    try {
-      await startDebate({
-        topic: topic.trim(),
-        rounds: 3,
-        first_speaker: "qwen",
-      });
-      console.log("Starting debate:", topic.trim());
-      arenaRef.current?.scrollIntoView({ behavior: "smooth" });
-    } catch (error) {
-      alert("Failed to start debate: " + (error as Error).message);
-    }
+    window.open(`/controller?topic=${encodeURIComponent(topic.trim())}`, "_blank");
   };
 
   return (
@@ -152,13 +140,13 @@ export default function HomePage() {
             </button>
           </div>
           <div className="mt-5 flex flex-wrap justify-center gap-3">
-            <Link className="border border-white/20 px-4 py-2 text-sm text-white/80 hover:border-[#FFDB86]" to="/controller">
+            <Link target="_blank" rel="noopener noreferrer" className="border border-white/20 px-4 py-2 text-sm text-white/80 hover:border-[#FFDB86]" to="/controller">
               Controller
             </Link>
-            <Link className="border border-white/20 px-4 py-2 text-sm text-white/80 hover:border-[#FFDB86]" to="/qwen">
+            <Link target="_blank" rel="noopener noreferrer" className="border border-white/20 px-4 py-2 text-sm text-white/80 hover:border-[#FFDB86]" to="/qwen">
               Qwen Screen
             </Link>
-            <Link className="border border-white/20 px-4 py-2 text-sm text-white/80 hover:border-[#FFDB86]" to="/gemma">
+            <Link target="_blank" rel="noopener noreferrer" className="border border-white/20 px-4 py-2 text-sm text-white/80 hover:border-[#FFDB86]" to="/gemma">
               Gemma Screen
             </Link>
           </div>

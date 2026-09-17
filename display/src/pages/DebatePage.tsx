@@ -82,7 +82,9 @@ function ControllerDesk({
   status: string;
   connected: boolean;
 }) {
-  const [topic, setTopic] = useState("");
+  const searchParams = new URLSearchParams(window.location.search);
+  const initialTopic = searchParams.get("topic") || "";
+  const [topic, setTopic] = useState(initialTopic);
   const [rounds, setRounds] = useState(3);
   const [firstSpeaker, setFirstSpeaker] = useState<AgentRole>("qwen");
   const [error, setError] = useState("");
