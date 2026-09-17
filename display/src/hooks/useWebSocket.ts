@@ -9,17 +9,16 @@ type WebSocketConnectionOptions = {
   baseReconnectDelay?: number;
   maxReconnectDelay?: number;
   enableReconnect?: boolean;
-  maxMessages?: number;
 };
 
 type WebSocketConnectionReturn = {
   connectionStatus: ConnectionState;
-  messages: WebSocketMessage[];
+  message: string | null;
   sendMessage: (message: WebSocketMessage) => void;
   lastError: string | null;
   connect: () => void;
   disconnect: () => void;
-  clearMessages: () => void;
+  clearMessage: () => void;
   clearError: () => void;
   isConnected: boolean;
 };
@@ -38,11 +37,10 @@ export function useWebSocketConnection(
     baseReconnectDelay = 1000,
     maxReconnectDelay = 30000,
     enableReconnect = true,
-    maxMessages = 100,
   } = options;
 
   const [connectionStatus, setConnectionStatus] = useState<ConnectionState>('disconnected');
-  const [messages, setMessages] = useState<WebSocketMessage[]>([]);
+  const [message, setMessage] = useState<string | null>(null);
   const [lastError, setLastError] = useState<string | null>(null);
 
   const wsRef = useRef<WebSocket | null>(null);
@@ -88,14 +86,7 @@ export function useWebSocketConnection(
         try {
           const parsedMessage = JSON.parse(event.data);
           if (isValidWebSocketMessage(parsedMessage)) {
-            setMessages((prev) => {
-              const newMessages = [...prev, parsedMessage];
-              // Keep only the latest maxMessages to prevent memory issues
-              if (newMessages.length > maxMessages) {
-                return newMessages.slice(-maxMessages);
-              }
-              return newMessages;
-            });
+            setMessage(event.data);
           } else {
             console.warn('Received message with invalid structure:', parsedMessage);
           }
@@ -142,7 +133,7 @@ export function useWebSocketConnection(
       setConnectionStatus('error');
       setLastError(error instanceof Error ? error.message : 'Failed to create WebSocket connection');
     }
-  }, [url, enableReconnect, maxReconnectAttempts, baseReconnectDelay, maxReconnectDelay, maxMessages]);
+  }, [url, enableReconnect, maxReconnectAttempts, baseReconnectDelay, maxReconnectDelay]);
 
   useEffect(() => {
     connectRef.current = connect;
@@ -165,8 +156,8 @@ export function useWebSocketConnection(
     setConnectionStatus('disconnected');
   }, [cleanup]);
 
-  const clearMessages = useCallback(() => {
-    setMessages([]);
+  const clearMessage = useCallback(() => {
+    setMessage(null);
   }, []);
 
   const clearError = useCallback(() => {
@@ -202,12 +193,12 @@ export function useWebSocketConnection(
 
   return {
     connectionStatus,
-    messages,
+    message,
     sendMessage,
     lastError,
     connect,
     disconnect,
-    clearMessages,
+    clearMessage,
     clearError,
     isConnected: connectionStatus === 'connected',
   };
