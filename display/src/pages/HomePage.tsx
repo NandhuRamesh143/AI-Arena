@@ -1,6 +1,8 @@
 import { useState, useRef } from "react";
+import { Link } from "react-router-dom";
 import Header from "../components/Header";
 import WebThreads from "../components/WebThreads";
+import { startDebate } from "../lib/arena";
 
 export interface DebateConfig {
   topic: string;
@@ -25,21 +27,23 @@ export default function HomePage() {
     setMousePos({ x, y });
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!topic.trim()) {
       alert("Please enter a topic.");
       return;
     }
 
-    const payload: DebateConfig = {
-      topic: topic.trim(),
-      position: "for",
-      duration: 5,
-      rounds: 3,
-    };
-
-    console.log("Starting debate with config:", payload);
-    arenaRef.current?.scrollIntoView({ behavior: "smooth" });
+    try {
+      await startDebate({
+        topic: topic.trim(),
+        rounds: 3,
+        first_speaker: "qwen",
+      });
+      console.log("Starting debate:", topic.trim());
+      arenaRef.current?.scrollIntoView({ behavior: "smooth" });
+    } catch (error) {
+      alert("Failed to start debate: " + (error as Error).message);
+    }
   };
 
   return (
@@ -146,6 +150,17 @@ export default function HomePage() {
             >
               Start Debate
             </button>
+          </div>
+          <div className="mt-5 flex flex-wrap justify-center gap-3">
+            <Link className="border border-white/20 px-4 py-2 text-sm text-white/80 hover:border-[#FFDB86]" to="/controller">
+              Controller
+            </Link>
+            <Link className="border border-white/20 px-4 py-2 text-sm text-white/80 hover:border-[#FFDB86]" to="/qwen">
+              Qwen Screen
+            </Link>
+            <Link className="border border-white/20 px-4 py-2 text-sm text-white/80 hover:border-[#FFDB86]" to="/gemma">
+              Gemma Screen
+            </Link>
           </div>
         </div>
       </div>

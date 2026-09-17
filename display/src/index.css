@@ -52,10 +52,6 @@ body {
   width: stretch;
 }
 
-.form-footer-label::highlight {
-  color: #ff0000;
-}
-
 input[type="radio"] {
   accent-color: #666666;
 }

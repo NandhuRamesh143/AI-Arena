@@ -8,7 +8,10 @@ function App() {
     <div>
       <Routes>
         <Route path="/" element={<HomePage />} />
-        <Route path="/debate" element={<DebatePage />} />
+        <Route path="/controller" element={<DebatePage role="controller" />} />
+        <Route path="/qwen" element={<DebatePage role="qwen" />} />
+        <Route path="/gemma" element={<DebatePage role="gemma" />} />
+        <Route path="/debate" element={<DebatePage role="controller" />} />
       </Routes>
     </div>
     </>

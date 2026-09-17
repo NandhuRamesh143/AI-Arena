@@ -23,6 +23,8 @@ SENTENCE_PAUSE = 0.12
 
 text_queue = Queue()
 audio_queue = Queue()
+pipeline = None
+worker_started = False
 
 
 def trim_silence(audio):
@@ -118,8 +120,18 @@ def playback_worker():
     except Exception as error:
         print(f"\nCould not open the audio output: {error}")
 
+        # Keep wait_for_speech from hanging when there is no output device.
+        while True:
+            audio_queue.get()
+            audio_queue.task_done()
+
 
 def load_tts():
+    global pipeline, worker_started
+
+    if pipeline is not None:
+        return
+
     print("Loading Kokoro...")
 
     pipeline = KPipeline(
@@ -137,27 +149,43 @@ def load_tts():
     for result in warmup_generator:
         pass
 
-    synthesis_thread = Thread(
-        target=synthesis_worker,
-        args=(pipeline,),
-        daemon=True
-    )
+    if not worker_started:
+        synthesis_thread = Thread(
+            target=synthesis_worker,
+            args=(pipeline,),
+            daemon=True
+        )
 
-    playback_thread = Thread(
-        target=playback_worker,
-        daemon=True
-    )
+        playback_thread = Thread(
+            target=playback_worker,
+            daemon=True
+        )
 
-    synthesis_thread.start()
-    playback_thread.start()
+        synthesis_thread.start()
+        playback_thread.start()
+        worker_started = True
 
     print("Kokoro is ready.")
 
 
-def queue_text(text, voice):
+def queue_text(text, voice=None):
+    voice = voice or "af_heart"
     text_queue.put((text, voice))
 
 
 def wait_for_speech():
     text_queue.join()
     audio_queue.join()
+
+
+def stop_tts():
+    with text_queue.mutex:
+        text_queue.queue.clear()
+        text_queue.all_tasks_done.notify_all()
+        text_queue.unfinished_tasks = 0
+
+    with audio_queue.mutex:
+        audio_queue.queue.clear()
+        audio_queue.all_tasks_done.notify_all()
+        audio_queue.unfinished_tasks = 0
+

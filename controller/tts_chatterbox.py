@@ -8,7 +8,7 @@ from queue import Queue
 from threading import Thread
 
 
-WORKSPACE_ROOT = Path(__file__).resolve().parents[2]
+WORKSPACE_ROOT = Path(__file__).resolve().parents[1]
 MODEL_CACHE = WORKSPACE_ROOT / "AI-Arena-Chatterbox-cache"
 
 os.environ.setdefault("HF_HOME", str(MODEL_CACHE))
@@ -228,6 +228,8 @@ def queue_text(text, voice=None):
         return ""
 
     sanitized_text = re.sub(r"\[[^\]]+\]", keep_supported_tag, text)
+    sanitized_text = re.sub(r"\*[^\*]+\*", "", sanitized_text)
+    sanitized_text = sanitized_text.replace("*", "")
     sanitized_text = " ".join(sanitized_text.split())
 
     if sanitized_text:
@@ -240,3 +242,20 @@ def wait_for_speech():
     text_queue.join()
     audio_queue.join()
     tags_queued_this_turn = 0
+
+
+def stop_tts():
+    global tags_queued_this_turn
+
+    with text_queue.mutex:
+        text_queue.queue.clear()
+        text_queue.all_tasks_done.notify_all()
+        text_queue.unfinished_tasks = 0
+
+    with audio_queue.mutex:
+        audio_queue.queue.clear()
+        audio_queue.all_tasks_done.notify_all()
+        audio_queue.unfinished_tasks = 0
+
+    tags_queued_this_turn = 0
+
