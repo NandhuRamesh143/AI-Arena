@@ -12,6 +12,13 @@ export default function Gemma() {
   // Process incoming messages
   useEffect(() => {
     const processPrompt = async () => {
+      const clearMsg = ws.messages.findLast(m => (m.type === "debate_started" || m.type === "stopped") && !m.processed_clear);
+      if (clearMsg) {
+        clearMsg.processed_clear = true;
+        setPhase('listening');
+        setDisplayedText('');
+      }
+
       const promptMsg = ws.messages.findLast(m => m.type === "prompt" && !m.processed);
       if (promptMsg && !isGenerating.current) {
         promptMsg.processed = true;
@@ -33,13 +40,6 @@ export default function Gemma() {
         } finally {
           isGenerating.current = false;
         }
-      }
-      
-      const clearMsg = ws.messages.findLast(m => (m.type === "debate_started" || m.type === "stopped") && !m.processed_clear);
-      if (clearMsg) {
-        clearMsg.processed_clear = true;
-        setPhase('listening');
-        setDisplayedText('');
       }
     };
     processPrompt();

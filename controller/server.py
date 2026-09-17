@@ -14,7 +14,7 @@ from pydantic import BaseModel
 
 ROOT = Path(__file__).resolve().parents[1]
 DISPLAY_DIST = ROOT / "display" / "dist"
-TTS_BACKEND = os.getenv("AI_ARENA_TTS_BACKEND", "kokoro").lower()
+TTS_BACKEND = os.getenv("AI_ARENA_TTS_BACKEND", "chatterbox").lower()
 TTS_ENABLED = os.getenv("AI_ARENA_TTS", "1") != "0"
 TTS_VOICES = {
     "qwen": os.getenv("AI_ARENA_QWEN_VOICE", "am_adam"),
@@ -219,12 +219,13 @@ class Arena:
                 }
             )
             await asyncio.to_thread(self.tts.load)
-            for chunk in speech_chunks(text):
+            is_chatterbox = self.tts and self.tts.name == "chatterbox"
+            for chunk in speech_chunks(text, keep_tags=is_chatterbox):
                 self.tts.queue(chunk, TTS_VOICES.get(role))
             await asyncio.to_thread(self.tts.wait)
             await self.broadcast({"type": "tts_finished", "role": role, "backend": self.tts.name})
         except Exception as error:
-            if TTS_BACKEND == "auto" and self.tts.name == "chatterbox":
+            if TTS_BACKEND in ("auto", "chatterbox") and self.tts.name == "chatterbox":
                 fallback = load_named_tts_backend("kokoro")
                 if fallback:
                     self.tts = fallback
@@ -289,7 +290,7 @@ def system_prompt(role: str, topic: str) -> str:
         "A little bit of edgy language or mild profanity is fine, but do not be overly harsh or mean.\n"
     )
     
-    if TTS_BACKEND == "chatterbox":
+    if TTS_BACKEND in ("chatterbox", "auto") or (arena.tts and arena.tts.name == "chatterbox"):
         prompt += (
             "Use one or two speech tags in every response from: [sarcastic], [angry], [dramatic], [surprised], [chuckle], [laugh], [groan], [sigh], [gasp].\n"
             "Prefer the clearly audible reaction tags [chuckle], [laugh], [groan], [sigh], and [gasp].\n"
@@ -302,7 +303,7 @@ def system_prompt(role: str, topic: str) -> str:
         prompt += "Do not use asterisks for actions.\n"
         
     prompt += (
-        "Keep your response to exactly 1 or 2 short sentences.\n"
+        "Keep your response to exactly 1 short sentence.\n"
         "Do not act like a helpful assistant.\n"
         "Winning matters less than making the audience laugh, gasp, or shout."
     )
@@ -310,9 +311,11 @@ def system_prompt(role: str, topic: str) -> str:
     return prompt
 
 
-def speech_chunks(text: str) -> list[str]:
-    sanitized = re.sub(r"\[[^\]]+\]", "", text)
-    sanitized = re.sub(r"\*[^\*]+\*", "", sanitized)
+def speech_chunks(text: str, keep_tags: bool = False) -> list[str]:
+    if not keep_tags:
+        sanitized = re.sub(r"\[[^\]]+\]", "", text)
+    else:
+        sanitized = text
     sanitized = sanitized.replace("*", "")
     parts = re.split(r"(?<=[.!?])\s+", sanitized)
     return [part.strip() for part in parts if part.strip()]
@@ -358,7 +361,7 @@ def load_tts_backend() -> TTSBackend | None:
         print("TTS disabled by AI_ARENA_TTS.")
         return None
 
-    preferred = ["kokoro"] if TTS_BACKEND == "auto" else [TTS_BACKEND]
+    preferred = ["chatterbox", "kokoro"] if TTS_BACKEND in ("auto", "chatterbox") else [TTS_BACKEND]
 
     for backend_name in preferred:
         backend = load_named_tts_backend(backend_name)
