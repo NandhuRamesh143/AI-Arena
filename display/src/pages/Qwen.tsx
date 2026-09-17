@@ -12,6 +12,7 @@ export default function Qwen() {
   // Process incoming messages
   useEffect(() => {
     const processPrompt = async () => {
+      // 1. Check for debate start/stop to reset state
       const clearMsg = ws.messages.findLast(m => (m.type === "debate_started" || m.type === "stopped") && !m.processed_clear);
       if (clearMsg) {
         clearMsg.processed_clear = true;
@@ -19,6 +20,17 @@ export default function Qwen() {
         setDisplayedText('');
       }
 
+      // 2. Check if opponent is thinking, go back to listening mode
+      const thinkingMsg = ws.messages.findLast(m => m.type === "agent_thinking" && !m.processed_thinking);
+      if (thinkingMsg) {
+        thinkingMsg.processed_thinking = true;
+        if (thinkingMsg.role !== "qwen") {
+          setPhase('listening');
+          setDisplayedText('');
+        }
+      }
+
+      // 3. Process our prompt
       const promptMsg = ws.messages.findLast(m => m.type === "prompt" && !m.processed);
       if (promptMsg && !isGenerating.current) {
         promptMsg.processed = true;

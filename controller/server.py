@@ -2,8 +2,15 @@ import asyncio
 import importlib
 import os
 import re
+import ssl
 from pathlib import Path
 from typing import Any
+
+# Bypass SSL verification for HuggingFace model downloads on strict/older systems
+os.environ["CURL_CA_BUNDLE"] = ""
+os.environ["REQUESTS_CA_BUNDLE"] = ""
+os.environ["HF_HUB_DISABLE_SSL_VERIFICATION"] = "1"
+ssl._create_default_https_context = ssl._create_unverified_context
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware

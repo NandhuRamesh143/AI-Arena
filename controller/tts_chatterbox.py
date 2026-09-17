@@ -193,16 +193,28 @@ def load_tts():
             allow_patterns=MODEL_FILES,
             local_files_only=True,
         )
-    except Exception:
+    except Exception as e:
         print(f"Downloading {MODEL_ID} to {MODEL_CACHE}...")
-        snapshot_path = snapshot_download(
-            repo_id=MODEL_ID,
-            cache_dir=MODEL_CACHE,
-            allow_patterns=MODEL_FILES,
-            local_files_only=False,
-        )
+        try:
+            snapshot_path = snapshot_download(
+                repo_id=MODEL_ID,
+                cache_dir=MODEL_CACHE,
+                allow_patterns=MODEL_FILES,
+                local_files_only=False,
+            )
+        except Exception as e2:
+            import traceback
+            print(f"Chatterbox download failed:")
+            traceback.print_exc()
+            raise e2
 
-    model = ChatterboxTurboTTS.from_local(snapshot_path, device)
+    try:
+        model = ChatterboxTurboTTS.from_local(snapshot_path, device)
+    except Exception as e3:
+        import traceback
+        print(f"Chatterbox from_local failed:")
+        traceback.print_exc()
+        raise e3
 
     # Pay the one-time CUDA/kernel startup cost before the live debate begins.
     model.generate(

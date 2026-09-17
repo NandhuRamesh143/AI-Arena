@@ -165,8 +165,8 @@ export default function HomePage() {
         </div>
       </div>
 
-  {/* {/* SECTION 3: MODEL REVEAL ARENA */}
-      <div ref={arenaRef} className="relative w-full h-screen bg-[#070709] flex flex-col items-center justify-center px-8 overflow-hidden border-t border-white/10">
+  {/* SECTION 3: MODEL REVEAL ARENA */}
+      <div ref={arenaRef} className="relative w-full min-h-screen bg-[#070709] flex flex-col items-center justify-center px-8 py-20 overflow-x-hidden border-t border-white/10">
          <div className="text-center mb-8">
             <h2 className="text-3xl font-light text-white tracking-widest uppercase mb-1">
               CHOOSE WHO GOES
@@ -246,7 +246,14 @@ export default function HomePage() {
                 </button>
               </div>
             ) : (
-              <div className="h-64 overflow-y-auto space-y-3 font-mono text-sm opacity-80">
+              <div 
+                className="h-64 overflow-y-auto space-y-3 font-mono text-sm opacity-80"
+                ref={(el) => {
+                  if (el) {
+                    el.scrollTop = el.scrollHeight;
+                  }
+                }}
+              >
                 {ws.messages.filter(m => m.type === "turn").length === 0 ? (
                   <p className="text-center text-white/50 mt-20">Debate is running... Waiting for first response.</p>
                 ) : (
