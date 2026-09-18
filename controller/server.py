@@ -12,6 +12,13 @@ os.environ["REQUESTS_CA_BUNDLE"] = ""
 os.environ["HF_HUB_DISABLE_SSL_VERIFICATION"] = "1"
 ssl._create_default_https_context = ssl._create_unverified_context
 
+import httpx
+_original_httpx_init = httpx.Client.__init__
+def _patched_httpx_init(self, *args, **kwargs):
+    kwargs["verify"] = False
+    _original_httpx_init(self, *args, **kwargs)
+httpx.Client.__init__ = _patched_httpx_init
+
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
@@ -294,7 +301,8 @@ def system_prompt(role: str, topic: str) -> str:
         f"Directly challenge {opponent}'s claims.\n"
         "Be highly entertaining, spirited, and theatrically overconfident.\n"
         f"Playfully roast {opponent} with absurd comparisons and escalating sarcasm.\n"
-        "A little bit of edgy language or mild profanity is fine, but do not be overly harsh or mean.\n"
+        "A little bit of edgy language or mild profanity is fine, but do not be overly harsh or mean.\nstay on the topic do not deviate from the main topic"
+        
     )
     
     if TTS_BACKEND in ("chatterbox", "auto") or (arena.tts and arena.tts.name == "chatterbox"):

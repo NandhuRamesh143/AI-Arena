@@ -211,10 +211,21 @@ def load_tts():
     try:
         model = ChatterboxTurboTTS.from_local(snapshot_path, device)
     except Exception as e3:
-        import traceback
-        print(f"Chatterbox from_local failed:")
-        traceback.print_exc()
-        raise e3
+        if "CUDA out of memory" in str(e3):
+            print("CUDA Out Of Memory! Retrying Chatterbox on CPU...")
+            try:
+                device = "cpu"
+                model = ChatterboxTurboTTS.from_local(snapshot_path, device)
+            except Exception as e4:
+                import traceback
+                print(f"Chatterbox CPU fallback failed:")
+                traceback.print_exc()
+                raise e4
+        else:
+            import traceback
+            print(f"Chatterbox from_local failed:")
+            traceback.print_exc()
+            raise e3
 
     # Pay the one-time CUDA/kernel startup cost before the live debate begins.
     model.generate(
