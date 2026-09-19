@@ -264,7 +264,7 @@ export default function HomePage() {
               </div>
             ) : (
               <div 
-                className="h-64 overflow-y-auto space-y-3 font-mono text-sm opacity-80"
+                className="h-64 overflow-y-auto space-y-3 font-mono text-sm opacity-80 whitespace-pre-wrap"
                 ref={(el) => {
                   if (el) {
                     el.scrollTop = el.scrollHeight;

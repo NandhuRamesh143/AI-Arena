@@ -178,6 +178,16 @@ class Arena:
                     await self.broadcast({"type": "turn", "turn": turn, "history": self.history})
                     await self._speak(role, text)
 
+            summary_text = await self._ask_summary()
+            summary_turn = {
+                "role": "system",
+                "name": "Host (Summary)",
+                "content": summary_text,
+            }
+            self.history.append(summary_turn)
+            await self.broadcast({"type": "turn", "turn": summary_turn, "history": self.history})
+            await self._speak("qwen", summary_text)
+
             await self.broadcast({"type": "debate_finished", "history": self.history})
         except asyncio.CancelledError:
             raise
@@ -212,6 +222,45 @@ class Arena:
                 "system": system_prompt(role, self.topic),
                 "prompt": prompt,
                 "round": round_number,
+            },
+        )
+
+        try:
+            return await asyncio.wait_for(future, timeout=int(os.getenv("AI_ARENA_MODEL_TIMEOUT", "240")))
+        finally:
+            self.pending.pop(role, None)
+
+    async def _ask_summary(self) -> str:
+        role = "qwen"
+        future: asyncio.Future[str] = asyncio.get_running_loop().create_future()
+        self.pending[role] = future
+
+        await self.broadcast(
+            {
+                "type": "agent_thinking",
+                "role": "system",
+                "round": "Summary",
+                "total_rounds": "Summary",
+            }
+        )
+
+        transcript = debate_history(self.history)
+        prompt = (
+            f"The debate on the topic '{self.topic}' has concluded.\n\n"
+            f"Transcript:\n{transcript}\n\n"
+            "Please provide a neutral summary of what both models argued. "
+            "Use exactly 3 bullet points. Do not include introductory text, just the bullet points."
+        )
+
+        await self.send_to_role(
+            role,
+            {
+                "type": "prompt",
+                "role": role,
+                "model": AGENTS[role]["model"],
+                "system": "You are a neutral debate moderator.",
+                "prompt": prompt,
+                "round": 999,
             },
         )
 
