@@ -179,13 +179,18 @@ def wait_for_speech():
 
 
 def stop_tts():
-    with text_queue.mutex:
-        text_queue.queue.clear()
-        text_queue.all_tasks_done.notify_all()
-        text_queue.unfinished_tasks = 0
+    import queue
+    while True:
+        try:
+            text_queue.get_nowait()
+            text_queue.task_done()
+        except queue.Empty:
+            break
 
-    with audio_queue.mutex:
-        audio_queue.queue.clear()
-        audio_queue.all_tasks_done.notify_all()
-        audio_queue.unfinished_tasks = 0
+    while True:
+        try:
+            audio_queue.get_nowait()
+            audio_queue.task_done()
+        except queue.Empty:
+            break
 

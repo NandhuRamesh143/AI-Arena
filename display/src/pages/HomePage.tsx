@@ -16,8 +16,25 @@ export default function HomePage() {
   const arenaRef = useRef<HTMLDivElement>(null);
   
   const ws = useWebSocketConnection(arenaWebSocketUrl("controller"));
-  const isFinished = ws.messages.some(m => m.type === "debate_finished");
-  const running = ws.messages.some(m => m.type === "debate_started") && !isFinished && !ws.messages.some(m => m.type === "stopped");
+  
+  const stateEvents = ws.messages.filter(m => ["debate_started", "debate_finished", "stopped", "snapshot"].includes(m.type));
+  const latestEvent = stateEvents[stateEvents.length - 1];
+
+  let isFinished = false;
+  let running = false;
+
+  if (latestEvent) {
+    if (latestEvent.type === "debate_finished") {
+      isFinished = true;
+    } else if (latestEvent.type === "debate_started") {
+      running = true;
+    } else if (latestEvent.type === "snapshot") {
+      running = Boolean(latestEvent.running);
+    }
+  }
+
+  const latestTurnOrSnapshot = ws.messages.filter(m => ["turn", "snapshot", "debate_finished"].includes(m.type)).pop();
+  const currentHistory = (latestTurnOrSnapshot?.history as any[]) || [];
 
   // Parallax mouse offset state
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
@@ -40,7 +57,7 @@ export default function HomePage() {
     try {
       await startDebate({
         topic: topic.trim(),
-        rounds: 5,
+        rounds: 3,
         first_speaker: firstSpeaker,
       });
       console.log("Starting debate:", topic.trim());
@@ -236,7 +253,7 @@ export default function HomePage() {
                   THE DUST SETTLES
                 </h2>
                 <p className="text-lg text-white/70 mb-8 max-w-lg">
-                  Both models have presented their arguments. The 5-round debate has officially concluded. Who emerged victorious? You decide.
+                  Both models have presented their arguments. The debate has officially concluded. Who emerged victorious? You decide.
                 </p>
                 <button 
                   onClick={() => window.location.reload()}
@@ -254,13 +271,13 @@ export default function HomePage() {
                   }
                 }}
               >
-                {ws.messages.filter(m => m.type === "turn").length === 0 ? (
+                {currentHistory.length === 0 ? (
                   <p className="text-center text-white/50 mt-20">Debate is running... Waiting for first response.</p>
                 ) : (
-                  ws.messages.filter(m => m.type === "turn").map((m: any, i) => (
+                  currentHistory.map((turn: any, i: number) => (
                     <div key={i} className="pb-3 border-b border-white/10 last:border-0">
-                      <span className={`font-bold mr-2 ${m.turn.role === 'qwen' ? 'text-[#FFDB86]' : 'text-white'}`}>{m.turn.name}:</span>
-                      {m.turn.content}
+                      <span className={`font-bold mr-2 ${turn.role === 'qwen' ? 'text-[#FFDB86]' : 'text-white'}`}>{turn.name}:</span>
+                      {turn.content}
                     </div>
                   ))
                 )}
